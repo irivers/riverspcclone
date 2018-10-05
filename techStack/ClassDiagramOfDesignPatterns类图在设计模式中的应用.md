@@ -28,7 +28,122 @@
 >
 > 为一个产品族提供了统一的创建接口
 
+#### Code
 
+```java
+abstract class CPU{}
+class EmberCPU extends CPU{}
+class EnginolaCPU extends CPU{}
+
+abstract class MMU{}
+class EmberMMU extends MMU{}
+class EnginolaMMU extends MMU{}
+
+enum Architecture{ ENGINOLA, EMBER}
+
+abstract class AbstractFactory{
+    private static final EmberToolkit EMBER_TOOLKIT = new EmberToolkit();
+    private static final EnginolaToolkit ENGINOLA_TOOLKIT = new EnginolaToolkit();
+    
+    static AbstractFactory getFactory(Architecture architecture){
+        AbstractFactory factory = null;
+        switch(architecture){
+            case ENGINOLA:
+                factory = ENGINOLA_TOOLKIT;
+                break;
+            case EMBER:
+                factory = EMBER_TOOLKIT;
+                break;
+        }
+        return factory;
+    }
+    public abstract CPU createCPU();
+    public abstract MMU createMMU();
+}
+
+// class EmberFactory
+class EmberToolKit extends AbstractFactory{
+    @Override
+    public CPU createCPU(){return new EmberCPU();}
+    
+    @Override
+    public MMU createMMU(){return new EmberMMU();}
+}
+// class EnginolaFactory
+class EnginolaToolkit extends AbstractFactory{
+    @Override
+    public CPU createCPU(){return new EnginolaCPU();}
+    
+    @Override
+    public MMU createMMU(){return new EnginolaMMU();}
+}
+
+public class Client{
+    public static void main(String[] args){
+        AbstractFactory factory = AbstractFactory.getFactory(Architecture.EMBER);
+        CPU cpu = factory.createCPU();
+    }
+}
+```
+
+
+
+#### Diagram
+
+```code
+@startuml
+CPU <|-- EmberCPU
+CPU <|-- EnginolaCPU
+
+AbstractFactory <|-- EmberToolkit
+AbstractFactory <|-- EnginolaToolkit
+
+AbstractFactory *-- Architecture
+
+EmberToolkit ..> EmberCPU
+EnginolaToolkit ..> EnginolaCPU
+
+Client ..> AbstractFactory
+
+abstract class CPU{
+}
+class EmberCPU{
+}
+class EnginolaCPU{
+}
+
+enum Architecture{
+}
+
+abstract class AbstractFactory{
+- EMBER_TOOLKIT:EmberToolkit
+- ENGINOLA_TOOLKIT:EnginolaToolkit
+ getFactory(Architecture):AbstractFactory
++ createCPU(): CPU
++ createMMU(): MMU
+}
+class EmberToolkit{
+}
+class EnginolaToolkit{
+}
+
+class Client{
++ main(String[]): void
+}
+@enduml
+```
+
+
+
+![img](http://www.plantuml.com/plantuml/png/RL5XIyCm4Fr-lo8VEwNx0KN6vfWoN5RH-ab4iYxKO9f0cWfI_UzUjsZFj1z2kFVUlToxB1ild6zh3Ulx9tRrbQPiKn-amueWfbB6Qj63m3dLOHKGekj1M1qQxqJfR_1Ozqbw2clrk_9Z1VK8eh7F1OfMhdnJNfQ-THA0chBvV34ac6PEuz5t0ajpJlCq7woraiQpD5smQ4O04G1MQj4q30qx-8Pp4QQZIF0DODpDUTnDaA4xW21DM__Rq8HdF747k7b-lNbuBV9yTxSjChgwdjpVRlVvRZNmqJ-nIlwQ9VJnMHOlvvALJWelCMqoonXUVn3d9mYl8HsPOvoP484v_qg7bhLG9ddqJfdg-GLTFwmwecufpR6jzGy0)
+
+
+
+
+
+- 官方图例
+
+  ![Scheme of Abstract Factory](https://sourcemaking.com/files/v2/content/patterns/Abstract_Factory.png)
 
 ### 2. Factory Method--工厂方法模式
 
