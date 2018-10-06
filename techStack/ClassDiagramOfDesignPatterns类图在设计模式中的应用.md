@@ -532,11 +532,394 @@ public class Singleton{
 >
 > 将某个类的接口转换成客户端期望的另一个接口表示。适配器模式可以消除由于接口不匹配所造成的类兼容性问题
 
+#### 模式定义
+
+将一个接口转换成客户希望的另一个接口，适配器模式使接口不兼容的那些类可以一起工作，其别名为包装器（Wrapper）。适配器模式既可以作为类结构型模式，也可以作为对象结构型模式
+
+#### 模式结构
+
+适配器模式包含如下角色：
+
+- Target：目标抽象类
+- Adapter：适配器类
+- Adaptee：适配者类
+- Client：客户类
+
+#### Code
+
+```java
+/* The OLD */
+class SquarePeg{
+    private double width;
+    
+    public SquarePeg(double width){ this.width = width;}
+    public double getWidth(){return width;}
+    public void setWidth(double width){this.width = width;}
+}
+/* The NEW*/
+class RoundHole{
+    private final int radius;
+    
+    public RoundHole(int redius){
+        this.radius = radius;
+        System.out.println("RoundHole:max SquarePeg is " + radius*Math.sqrt(2));
+    }
+    public int getRadius(){return redius;}
+}
+
+//Design a "wrapper" class that can "impedance match" the old to the new
+class SquarePegAdapter{
+    private final SquarePeg squarePeg;
+    
+    public SquarePegAdapter(double w){
+        squarePeg = new SquarePeg(w);
+    }
+    //Identify the desired interface
+    public void makeFit(RoundHole roundHole){
+        double amount = squarePeg.getWidth() - roundHole.getRadius()*Math.sqrt(2);
+        System.out.println("reducing SquarePeg " + squarePeg.getWidth() + "by" +((amount < 0)? ): amount + "amount");
+        if(amount > 0){
+            squarePeg.setWidth(squarePeg.getWidth() - amount);
+            System.out.println(" Width is now "+ squarePeg.getWidth());
+        }
+    }
+}
+public class AdapterDemoSquarePeg{
+    public static void main(String[] args){
+        RoundHole roundHole = new RoundHole(5);
+        SquarePegAdapter squarePegAdapter;
+        for(int i = 6; i < 10; i++){
+            squarePegAdapter = new SquarePegAdapter((double)i);
+            squarePegAdapter.makeFit(roundHole);
+        }
+    }
+}
+
+```
+
+
+
+- 一个很好的使用前后对比的例子
+
+  ```java
+  /* Before */
+  class Line{
+      public void draw(int x1, int y1, int x2, int y2){
+          //...
+      }
+  }
+  class Rectangle{
+      public void draw(int x ,int y, int width, int height){
+          //...
+      }
+  }
+  
+  public class AdapterDemo{
+      public static void main(String[] args){
+          Objectp[] shapes = { new Line(), new Rectangle()};
+          int x1 = 10, y1 = 20; x2,y2,width, height;
+          for(Object shape : shapes){
+              if(shape.getClass().getSimpleName().equals("Line")){
+                  ((Line)shape).draw(x1, y1, x2, y2);
+              }else if(shape.getClass().getSimpleName().equals("Rectangle")){
+                  ((Rectangle)shape).draw(x2, y2, width, height);
+              }
+          }
+      }
+  }
+  ```
+
+  ```java
+  /* After */
+  interface Shape{
+      void draw(int x, int y, int z, int j);
+  }
+  
+  class Line{
+      public void draw(int x1, int x2, int y1, int y2){
+          //...
+      }
+  }
+  class Rectangle{
+      public void draw(int x , int y, int width, int height){
+          //...
+      }
+  }
+  
+  class LineAdapter implements Shape{
+      private Line adaptee;
+      
+      public LineAdapter(Line line){
+          this.adaptee = line;
+      }
+      @Override
+      public void draw(int x1, int y1, int x2, int y2){
+          adaptee.draw(x1, y1, x2, y2);
+      }
+  }
+  class RectangleAdapter implements Shape{
+      private Rectangle adaptee;
+      
+      public RectangleAdapter(Rectangle rectangle){
+          this.adaptee = rectangle;
+      }
+      @Override
+      public void draw(int x1, int y1, int x2, int y2){
+          int x = Math.min(x1, x2);
+          int y = Math.min(y1, y2);
+          int width = Math.abs(x2 - x1);
+          int height = Math.abs(y2 - y1);
+          adaptee.draw(x, y, width, height);
+      }
+  }
+  
+  public class AdapterDemo{
+      public static void main(String[] args){
+          Shape[] shapes = {new RectangleAdapter(new Ractangle()),
+                            new LineAdapter(new Line())};
+          int x1 = 10, y1 = 20;
+          int x2 = 30, y2 = 60;
+          for(Shape shape: shapes){
+              shape.draw(x1, y1, x2, y2);
+          }
+      }
+  }
+  ```
+
+
+#### Diagram
+
+- 这个图是一个蛮特殊的情形，能实现适配器就可以，也算是一种实现方式了
+
+![img](http://www.plantuml.com/plantuml/png/PP0n3y8W58HtViKRQHh-036cBiRHrC4PvQKIswBmqC7utwLAIsD7lhlS7Q_of1o5hcM7Ur0EzzXijBeHEX1Y3RKDlTxP5fVoIWYO831sRfNtcRoOWAVHT96WRJZ5X3AB_8UAo1gaus3ZnSpe4nnzyc6DPkzKabSD9Kvf4xm4qnChiyJZE-NNNqSiY2Y7_7zeoF8ZarbcvS8wcz-fAsuDyQct00bfROMzZfVz0000)
+
+
+
 ### 8. Bridge--桥接模式
 
 > Separates an object's interface from its implements
 >
 > 将一个抽象与实现解耦，以便两者可以独立地变化
+
+#### 模式动机
+
+设想如果要绘制矩形、圆形、椭圆、正方形，我们至少需要4个形状类，但是如果绘制的图形需要具有不同的颜色，如红色、绿色、蓝色等，此时至少有如下两种方案：
+
+- 为每一种形状都提供一套各种颜色的版本
+- 根据实际需要对形状和颜色进行组合
+
+对于有两个变化维度(即两个变化原因)的系统，采用方案二来进行设计系统中类的个数更少，且系统扩展更为方便。设计方案二即为桥接模式的应用。桥接模式将继承关系转换为关联关系，从而降低了类与类之间的耦合，减少了代码编写量
+
+#### 模式定义
+
+桥接模式（Bridge Pattern）：将抽象部门与它的实现部分分离，使它们都可以独立地变化。它是一种对象结构型模式，又称为柄体（Handle and Body）模式或接口（Interface）模式
+
+#### 优缺点
+
+优点：
+
+- 分离抽象接口及其实现部分
+- 桥接模式有时类似于多继承方案，但是多继承方案违背了类的单一职责原则（即一个类只有一个变化的原因），复用性比较差，而且多继承结构中类的个数非常庞大，桥接模式是比多继承方案更好的解决方法
+- 桥接模式提高了系统的可扩展性，在两个变化维度中任意扩展一个维度，都不需要修改原有系统
+- 实现细节对客户透明，可以对用户隐藏实现细节
+
+缺点：
+
+- 桥接模式的引入会增加系统的理解和设计难度，由于聚合关联关系建立在抽象层，要求开发者针对抽象进行设计与编程
+- 桥接模式要求正确识别出系统中两个独立变化的维度，因此其使用范围具有一定的局限性
+
+#### 模式结构
+
+桥接模式包含以下角色：
+
+- Abstraction：抽象类
+- RefinedAbstraction: 扩充抽象类
+- Implementor：实现类接口
+- ConcreteImplementor：具体实现类
+
+#### Code
+
+```java
+class Node{
+    public int value;
+    public Node prev, next;
+    
+    public Node(int value){
+        this.value = value;
+    }
+}
+
+class StackArray{
+    private int[] items;
+    private int size = -1;
+    
+    public StackArray(){
+        this.items = new int[12];
+    }
+    public StackArray(int cells){
+        this.items = new int[cells];
+    }
+    public void push(int i){
+        if(!isFull){
+            items[++size] = i;
+        }
+    }
+    public boolean isEmpty(){
+        return size == -1;
+    }
+    public boolean ifFull(){
+        return size == items.length - 1;
+    }
+    public int pop(){
+        if(isEmpty()){
+            return -1;
+        }
+        return items[size--];
+    }
+}
+
+class StackList{
+    private Node last;
+    public void push(int i){
+        if(last == null){
+            last = new Node(i);
+        }else{
+            last.next = new Node(i);
+            last.next.prev = last;
+            last = last.next;
+        }
+    }
+    public boolean isFull(){
+        return last == null;
+    }
+    public boolean isEmpty(){
+        return false;
+    }
+    public int top(){
+        if(siEmpty()){
+            return -1;
+        }
+        return last.value;
+    }
+    public int pop(){
+        if(isEmpty()){
+            return -1;
+        }
+        int ret = last.value;
+        last = last.prev;
+        return ret;
+    }
+}
+
+class StackFIFO extends StackArray{
+    private StackArray stackArray = new StackArray();
+    public int pop(){
+        while(! isEmpty()){
+            statckArray.push(super.pop());
+        }
+        int ret = stackArray.pop();
+        while(!stackArray.isEmpty()){
+            push(stackArray.pop());
+        }
+        return ret;
+    }
+}
+//把例子敲完，看一下这里的桥接模式究竟是如何工作的
+class StackHanoi extends StackArray{
+    private int totalRejected = 0;
+    public int reportRejected(){
+        return totalRejected;
+    }
+    public void push(int in){
+        if(!isEmpty()  &&  in > top){
+            totalRejected ++;
+        }else{
+            super.push(i);
+        }
+    }
+}
+
+public class BridgeDisc{
+    public static void main(Stirng[] args){
+        StackArray[] stacks ={ nrew StackArray(), new StackFIFO(), new StackHanoi()};
+        StackList stackList = new Stacklist();
+        for(int i = 1, num; i < 15; i++){
+            stacks[0].push(i);
+            stackList.push(i);
+            stacks[1].push(i);
+        }
+        Random random = new Random();
+        for(int i = i, num; i < 15; i++){
+            stacks[2].push(random.nextInt(20));
+        }
+        while(!stacks[0].isEmpty()){stacks[0].pop();}
+        while(!stackList.isEmpty()){stackList.pop()}
+    }
+}
+// 这个例子怎么个原理没有看明白，但是👇有一个非常好的例子，应该学会
+```
+
+- 非常棒的例子，跨平台视频播放器
+
+  ```java
+  public interface VideoFile{
+      public void decode(String osType, String fileName);
+  }
+  
+  public class AVIFile implements VideoFile{
+      public void decode(String osType, Stirng fileName){
+          //...
+      }
+  }
+  public class WMVFile implements VideoFile{
+      public void decode(String osType, String filenName){}
+  }
+  
+  public abstract class OperatingSystemVersion{
+      protected VideoFile videoFile;
+      public void setVideo(VideoFile videoFile){
+          this.videoFile = videoFile;
+      }
+      public abstract void play(String fileName);
+  }
+  
+  public class LinuxVersion extends OperatingSystemVersion{
+      public void play(String fileName){
+          //...
+      }
+  }
+  public class WindowsVersion extends OperatingSystemVersion{
+      pubicl void play(String fileName){
+          //...
+      }
+  }
+  
+  public class Client{
+      public static void main(String[] args){
+          VideoFile videoFile;
+          OperatingSystemVersion osType1 = new LinuxVersion();
+          videoFile = new AVIFile();
+          osType1.setVideo(videoFile);
+          osTYpe1.play("AVI");
+          
+          OperatingSystemVersion osType2 = new WindowsVersion();
+          videoFile = new AVIFile();
+          osType2.setVideo(videoFile);
+          osType2.play("AVI");
+      }
+  }
+  ```
+
+
+#### Diagram
+
+- 跨平台视频播放器的例子
+
+![img](https://img-blog.csdn.net/20151110160157860)
+
+![img](http://www.plantuml.com/plantuml/png/XP1FJyCm3CNl_XG-5fNk0qmSnWK92SHXKdVs6eCifSaKkuDfyDrPMJh-AAAdo4-_vxpdbHeb6teFhJYET-8PRzuN2xnjxyVXhxnvRB_afnqdCWalwuCQzoqdbHXEJDFWWuJXBIl_WXi9BhxgXFxygsaYbgq001ACqpDrZ1VB4Mfqt4N7rThIoNHzVgwMk8_Yu0EWywIQYytp6S-5vt6WhLgYpl1iBAS_0k9-ohpyZWyrAjiuLXTjsbtZblBgdQT3LIxsw-nZt1ARqNpuENZ5mGsz_mG0)
+
+
 
 ### 9. Composite—组合模式
 
